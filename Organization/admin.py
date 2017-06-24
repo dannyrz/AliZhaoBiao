@@ -1,6 +1,6 @@
 import time
 from django.contrib import admin
-from Organization.models import Base
+from Organization.models import Info
 from Organization.models import Type
 from Organization.models import Credential
 from Organization.models import CredentialType
@@ -17,7 +17,7 @@ class OrganizationTypeAdmin(admin.ModelAdmin):
 admin.site.register(Type,OrganizationTypeAdmin)
 
 
-class BaseAdmin(admin.ModelAdmin):
+class InfoAdmin(admin.ModelAdmin):
     list_display = [ 'Name','IID', 'CreditNumber','Contact','TelPhone','Status']
     radio_fields = {"Status": admin.HORIZONTAL}
     raw_id_fields = ("Type",)
@@ -32,7 +32,7 @@ class BaseAdmin(admin.ModelAdmin):
         obj.save()
 
     def get_form(self, request, obj=None, **kwargs):
-        form = super(BaseAdmin, self).get_form(request, obj, **kwargs)
+        form = super(InfoAdmin, self).get_form(request, obj, **kwargs)
         return form
 
     #def formfield_for_dbfield(self, db_field, **kwargs):
@@ -41,4 +41,4 @@ class BaseAdmin(admin.ModelAdmin):
             #field.initial = time.time();
         #return field
 
-admin.site.register(Base,BaseAdmin)
+admin.site.register(Info,InfoAdmin)

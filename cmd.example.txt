@@ -1,0 +1,12 @@
+创建项目
+django-admin.py startproject HelloWorld
+启动服务
+python manage.py runserver 0.0.0.0:8000
+创建模型
+python manage.py startapp TestModel
+同步模型到数据表
+python manage.py syncdb
+
+python manage.py migrate   # 创建表结构
+python manage.py makemigrations TestModel  # 让 Django 知道我们在我们的模型有一些变更
+python manage.py migrate TestModel   # 创建表结构

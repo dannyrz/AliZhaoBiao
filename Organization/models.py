@@ -18,8 +18,8 @@ class Type(models.Model):
 
 
 # 公司，团体，设计院，监理公司，企事业单位资料
-class Base(models.Model):
-    IID=models.CharField('IID',max_length=32)
+class Info(models.Model):
+    IID=models.CharField('IID',max_length=32, unique=True, blank=False)
     Name = models.CharField('机构名称',max_length=200)
     CreditNumber = models.CharField('机构代码', max_length=32, blank=True)  # 证书 营业执照号 统一代码
     LegalRepresentative = models.CharField('法人代表',max_length=32,blank=True) #法人代表
@@ -66,7 +66,7 @@ class Credential(models.Model):
     OrganizationID= models.CharField(max_length=32) #组织ID
     TypeID= models.CharField(max_length=32) #资质类别ID
     PicUrl= models.CharField(max_length=500) #资质图片
-    Remark = models.CharField(max_length=500)  # 备注
+    Remark = models.CharField(max_length=500,blank=True)  # 备注
     Status=models.IntegerField() # 代表有效，无效，待审核等状态
 
     class Meta:
@@ -76,7 +76,7 @@ class Credential(models.Model):
 class CredentialType(models.Model):
     IID = models.CharField(max_length=32)
     Name = models.CharField(max_length=200)
-    Remark = models.CharField(max_length=500)
+    Remark = models.CharField(max_length=500,blank=True)
 
     class Meta:
         verbose_name_plural = '资质类别'
