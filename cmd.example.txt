@@ -6,7 +6,7 @@ python manage.py runserver 0.0.0.0:8000
 python manage.py startapp TestModel
 
 同步模型到数据表
-python manage.py syncdb 这个命令测试时无效。why?
+python manage.py syncdb 这个命令测试时无效。why? 这是什么原因导致的呢？
 
 python manage.py migrate   # 创建表结构
 python manage.py makemigrations TestModel  # 让 Django 知道我们在我们的模型有一些变更
