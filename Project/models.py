@@ -4,8 +4,8 @@ import time;
 
 # Create your models here.
 class Info(models.Model):
-    IID = models.CharField('IID', unique=True, max_length=32)
-    Name = models.CharField('项目名称', max_length=100)
+    IID = models.CharField('IID', unique=True,blank=False,  max_length=32)
+    Name = models.CharField('项目名称', max_length=100,blank=False)
     SerialNumber = models.CharField('项目编号', max_length=100, blank=True)
     #建立单独的关联表增加兼容性
     #Organization = models.ForeignKey(Organization.models.Info, 'IID', blank=False,default=time.time())
@@ -18,6 +18,8 @@ class Info(models.Model):
     District = models.CharField('区域', max_length=50, blank=True)
     Abstract= models.TextField('项目概述', max_length=2000, blank=True)
     DocumentURL= models.FileField('相关文件',upload_to='upload',blank=True)
+    Contact = models.CharField('联系人', max_length=50, blank=True)
+    Telphone = models.CharField('联系电话', max_length=50, blank=True)
     Status_choices = (
         (0, "发布公告"),
         (1, "招标中"),
