@@ -3,24 +3,45 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <meta http-equiv="content-language" content="zh-CN" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<title>阿里招标 - 服务于家庭及中小企业的智能弱电工程招标平台</title>
 	<link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
 	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
 	<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/common_static/css/nav.css">
     {% block head %}
 
     {% endblock %}
 </head>
 <body>
 <div class="container">
-    <ul class="nav nav-pills">
-  <li class="active"><a href="#">Home</a></li>
-  <li><a href="#">SVN</a></li>
-  <li><a href="#">iOS</a></li>
-  <li><a href="#">VB.Net</a></li>
-  <li><a href="#">Java</a></li>
-  <li><a href="#">PHP</a></li>
-</ul>
+
+    <nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="#">阿里招标</a>
+    </div>
+    <div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#">弱电工程</a></li>
+            <li><a href="#">别墅智能</a></li>
+            <li><a href="#">家庭装修</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    知识堂 <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#">Jasper Report</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#">分离的链接</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    </div>
+</nav>
+
+
 <hr/>
     {% block mainbody %}
        <p>hi,cc.</p>

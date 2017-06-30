@@ -20,5 +20,6 @@ from Project import views as project_views
 
 urlpatterns = [
     url(r'^project/create/$', project_views.create, name='create'),
+    url(r'^project/create_result/$', project_views.create_result, name='create_result'),
     url(r'^admin/', admin.site.urls),
 ]
