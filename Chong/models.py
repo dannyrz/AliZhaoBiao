@@ -18,6 +18,11 @@ class Task(models.Model):
     InURLNumber=models.IntegerField('页面数',default=1)
     PageProperty = models.CharField('属性名', max_length=100, blank=False)
     PagePropertyRegularExpression = models.CharField('属性内容匹配', max_length=100, blank=False)
+    ResponseFormat_choices = (
+        ("XML", "HTML/XML"),
+        ("JSON", "JSON"),
+    )
+    ResponseFormat = models.CharField('返回格式', choices=ResponseFormat_choices, max_length=10,default="XML")
     BodyFilterTextRegularExpression= models.CharField('属性名', max_length=5000, blank=False)
     TextReplace= models.CharField('替换文本', max_length=5000, blank=False)
     EnableBroswer_choices = (
