@@ -2,7 +2,7 @@
  Ajax 三级省市联动
  http://code.ciaoca.cn/
  日期：2012-7-18
- 
+
  settings 参数说明
  -----
  url:省市数据josn文件路径
