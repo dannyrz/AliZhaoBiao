@@ -11,6 +11,8 @@ class Task(models.Model):
         ("GB2312","GB2312"),
     )
     Charset = models.CharField('编码', max_length=10,choices=Charset_choices, default="UTF-8")
+    NeedLogin=models.BooleanField('需要登陆',default=0)
+    Account=models.CharField('账号,密码', max_length=100, blank=True)
     WorkInterval = models.IntegerField('间隔时(min)', default=1)
     ThreadNumber = models.IntegerField('线程数', default=1)
     DatabaseConnectStr = models.CharField('数据库连接', max_length=5000, blank=False)
