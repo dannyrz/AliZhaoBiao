@@ -3,7 +3,7 @@ from Chong.models import Task
 import time;
 
 class TaskAdmin(admin.ModelAdmin):
-    list_display = [ 'Name', 'IID','Charset','WorkInterval','ThreadNumber','ResponseFormat','Status']
+    list_display = [ 'Name', 'IID','SpiderName','Charset','WorkInterval','ThreadNumber','ResponseFormat','Account','NeedLogin','Status']
     radio_fields = {"Status": admin.HORIZONTAL}
     save_on_top=True;
     search_fields = ['Name','IID']

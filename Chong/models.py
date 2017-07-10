@@ -6,6 +6,7 @@ from django.db import models
 class Task(models.Model):
     IID = models.CharField('IID', unique=True, blank=False, max_length=32)
     Name = models.CharField('任务名称', max_length=100, blank=False)
+    SpiderName = models.CharField('爬虫名称', max_length=20, blank=False)
     Charset_choices = (
         ("UTF-8","UTF-8"),
         ("GB2312","GB2312"),
