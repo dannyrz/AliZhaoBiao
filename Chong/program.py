@@ -10,6 +10,7 @@ import requests
 from lxml import etree
 import pymysql.cursors
 import time, os, sched 
+import multiprocessing
 
 dbconn = {
     'host':'123.157.8.102',
@@ -20,11 +21,63 @@ dbconn = {
     'charset':'utf8',
          }
 
-def dispatchTaskThread(task):
-	print(task)
+processDict={}
 
 
-def scanTask():
+def workSpider(task):
+	starturl=task['StartURL'].split('\\n')
+	fields={
+				"title":"//h3[@class='be-post-title']",
+				"postdate":"//div[@class='post-date']"
+			}
+	for url in starturl:
+		url=url.strip()
+		if url!='':
+			print(url)
+			task={
+				'URL':url,
+				'Fields':fields,
+			}
+			spider=SimpleSpider(task)
+			content=spider.request();
+			html = etree.HTML(content)
+			row=spider.parse(html)
+			print(row)
+
+	time.sleep(100)
+
+#该函数已经测试过创建出的进程会随机运行该函数，说明进程各司其职
+def runTaskProcess(task):
+	processName=task['SpiderName']
+	process=multiprocessing.Process(target=workSpider,args=(task,))
+	process.name=processName
+	processDict[processName]=process;
+	process.start()
+
+
+
+def dispatchTaskProcess(task):
+	processName=task['SpiderName']
+	on=task['Status']==1;
+	process= processDict.get(processName,False)
+	if process==False:
+		if on==True:
+			runTaskProcess(task)
+	else:
+		if  process.is_alive()==False and on==True:
+			print('task is not alived and sql config:on is true.')
+			process.terminate()
+			runTaskProcess(task)
+		elif process.is_alive()==True and on==False:
+			print('task is lived and sql config:on is false.')
+			process.terminate()
+		elif process.is_alive()==False and on==False:
+			print('task is not alived and sql config:on is false.')
+			process.terminate()
+		elif process.is_alive()==True and on==True:
+			print('task is alived and sql config:on is true. it is in running.')
+
+def popTask():
 	while True:
 		connect = pymysql.Connect(**dbconn) # 连接数据库
 		cursor = connect.cursor() # 获取游标
@@ -35,9 +88,17 @@ def scanTask():
 		result = []
 		for res in cursor.fetchall():
 			row = {}
-			for i in range(len(index)-1):
+			for i in range(len(index)):
 				row[index[i][0]] = res[i]
-			result.append(row)
+			yield row
+		cursor.close()
+		connect.close()
+
+		time.sleep(10)
+
+def scanTask():
+	for row in popTask():
+		dispatchTaskProcess(row)
 		# for row in cursor.fetchall():
 		# 	task["IID"]=row[1];
 		# 	task["Name"]=row[2];
@@ -57,27 +118,12 @@ def scanTask():
 		# 	task["Account"]=row[16];
 		# 	task["NeedLogin"]=row[17];
 		# 	task["SpiderName"]=row[18];
-		dispatchTaskThread(result)
-		cursor.close()
-		connect.close()
-		time.sleep(60)
+		
+	
 
-head = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36'} 
-response = requests.get('http://tech.cocopass.com/?p=1074',headers=head)
-html = response.content  
-html = etree.HTML(html)
  
-fields={
-	"title":"//h3[@class='be-post-title']",
-	"postdate":"//div[@class='post-date']",
 
-}
-spider=SimpleSpider(fields);
-spider.parse(html)
 
 
 if __name__ == '__main__':
 	scanTask()
-
-
-

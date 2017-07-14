@@ -6,6 +6,7 @@ from django.db import models
 class Task(models.Model):
     IID = models.CharField('IID', unique=True, blank=False, max_length=32)
     Name = models.CharField('任务名称', max_length=100, blank=False)
+    CategoryID=models.CharField('类别', max_length=100, blank=True)
     SpiderName = models.CharField('爬虫名称', default='', max_length=100, blank=False)
     Charset_choices = (
         ("UTF-8","UTF-8"),
@@ -17,6 +18,7 @@ class Task(models.Model):
     WorkInterval = models.IntegerField('间隔时(min)', default=1)
     ThreadNumber = models.IntegerField('线程数', default=1)
     DatabaseConnectStr = models.CharField('数据库连接', max_length=5000, blank=False)
+    StartURL=models.TextField('起始页', default='',max_length=5000, blank=True)
     InURLRegularExpression = models.CharField('入口列表页', max_length=100, blank=False)
     InURLNumber=models.IntegerField('页面数',default=1)
     PageProperty = models.CharField('属性名', max_length=100, blank=False)

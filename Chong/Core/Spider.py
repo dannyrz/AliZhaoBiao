@@ -4,8 +4,8 @@ from lxml import etree
 
 class Spider(metaclass=ABCMeta):
 
-	def __init__(self,fields):
-		self.fields=fields;
+	def __init__(self,task):
+		self.task=task;
 
 	@abstractproperty
 	def readonly(self):
@@ -16,10 +16,9 @@ class Spider(metaclass=ABCMeta):
 		pass
 
 	def parse(self,html):
-		fields=list(self.fields);
+		fields=self.task['Fields'];
 		row={}
-		for fieldName in fields:
-			row[fieldName]=html.xpath(self.fields[fieldName])[0].xpath('string(.)').strip()
-		print(row);
+		for key in fields:
+			row[key]=html.xpath(fields[key])[0].xpath('string(.)').strip()
 		return row
 
