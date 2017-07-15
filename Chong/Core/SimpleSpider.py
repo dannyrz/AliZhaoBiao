@@ -11,10 +11,10 @@ class SimpleSpider(Spider):
 	def readonly(self):
 		return 1
 
-	def __init__(self,task):
-		self.task=task;
+	def __init__(self,args):
+		self.args=args;
 	 
 	def request(self):
-		response = requests.get(self.task['URL'],headers=head)
+		response = requests.get(self.args['URL'],headers=head)
 		content = response.content
 		return content

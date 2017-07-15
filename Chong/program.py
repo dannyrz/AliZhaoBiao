@@ -25,26 +25,28 @@ processDict={}
 
 
 def workSpider(task):
-	starturl=task['StartURL'].split('\\n')
+	starturl=task['StartURL'].split('\n')
 	fields={
 				"title":"//h3[@class='be-post-title']",
 				"postdate":"//div[@class='post-date']"
 			}
+
 	for url in starturl:
 		url=url.strip()
 		if url!='':
 			print(url)
-			task={
+			args={
 				'URL':url,
 				'Fields':fields,
 			}
-			spider=SimpleSpider(task)
+			spider=SimpleSpider(args)
 			content=spider.request();
 			html = etree.HTML(content)
 			row=spider.parse(html)
+			
 			print(row)
 
-	time.sleep(100)
+	time.sleep(20)
 
 #该函数已经测试过创建出的进程会随机运行该函数，说明进程各司其职
 def runTaskProcess(task):
