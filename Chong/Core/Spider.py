@@ -6,13 +6,9 @@ class Spider(metaclass=ABCMeta):
 
 	def __init__(self,args):
 		self.args=args;
-
-	@abstractproperty
-	def readonly(self):
-		return self._x
  
 	@abstractmethod
-	def request(self,args,callback):
+	def request(self,url,callback):
 		pass
 
 	# def parse(self,html):

@@ -8,13 +8,11 @@ head = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (
 
 class SimpleSpider(Spider):
 
-	def readonly(self):
-		return 1
-
 	def __init__(self,args):
 		self.args=args;
 	 
-	def request(self,args,callback):
-		response = requests.get(self.args['URL'],headers=head)
+	def request(self,url,callback):
+		response = requests.get(url,headers=head)
 		content = response.content
-		return callback(args,content)
+		callback(self,content)
+		return content
