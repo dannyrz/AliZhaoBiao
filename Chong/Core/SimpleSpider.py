@@ -14,7 +14,7 @@ class SimpleSpider(Spider):
 	def __init__(self,args):
 		self.args=args;
 	 
-	def request(self):
+	def request(self,args,callback):
 		response = requests.get(self.args['URL'],headers=head)
 		content = response.content
-		return content
+		return callback(args,content)

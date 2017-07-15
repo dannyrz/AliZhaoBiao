@@ -12,13 +12,13 @@ class Spider(metaclass=ABCMeta):
 		return self._x
  
 	@abstractmethod
-	def request(self):
+	def request(self,args,callback):
 		pass
 
-	def parse(self,html):
-		fields=self.args['Fields'];
-		row={}
-		for key in fields:
-			row[key]=html.xpath(fields[key])[0].xpath('string(.)').strip()
-		return row
+	# def parse(self,html):
+	# 	fields=self.args['Fields'];
+	# 	row={}
+	# 	for key in fields:
+	# 		row[key]=html.xpath(fields[key])[0].xpath('string(.)').strip()
+	# 	return row
 

@@ -24,28 +24,32 @@ dbconn = {
 processDict={}
 
 
+def parse(args,content):
+	html = etree.HTML(content)
+	fields=args['Fields'];
+	row={}
+	for key in fields:
+		row[key]=html.xpath(fields[key])[0].xpath('string(.)').strip()
+	print(row)
+	return row
+			
+			
+
 def workSpider(task):
 	starturl=task['StartURL'].split('\n')
 	fields={
 				"title":"//h3[@class='be-post-title']",
 				"postdate":"//div[@class='post-date']"
 			}
-
+	args={
+			'Fields':fields,
+		}
 	for url in starturl:
 		url=url.strip()
 		if url!='':
-			print(url)
-			args={
-				'URL':url,
-				'Fields':fields,
-			}
+			args["URL"]=url
 			spider=SimpleSpider(args)
-			content=spider.request();
-			html = etree.HTML(content)
-			row=spider.parse(html)
-			
-			print(row)
-
+			spider.request(args,callback=parse);
 	time.sleep(20)
 
 #该函数已经测试过创建出的进程会随机运行该函数，说明进程各司其职
