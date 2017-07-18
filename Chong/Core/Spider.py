@@ -4,6 +4,8 @@ from lxml import etree
 
 class Spider(metaclass=ABCMeta):
 
+	ID=0;
+
 	def __init__(self,args):
 		self.args=args;
  

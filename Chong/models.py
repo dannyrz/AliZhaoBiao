@@ -17,10 +17,16 @@ class Task(models.Model):
     Account=models.CharField('账号,密码', max_length=100, blank=True)
     WorkInterval = models.IntegerField('间隔时(min)', default=1)
     ThreadNumber = models.IntegerField('线程数', default=1)
+    DataPersistenceType_choices = (
+        ("POST", "POST提交保存"),
+        ("MYSQL", "MYSQL保存"),
+    )
+    DataPersistenceType = models.CharField('保存方式', max_length=10,choices=DataPersistenceType_choices, default="POST")
+    PostURL = models.CharField('POST接收地址', max_length=5000, blank=False)
     DatabaseConnectStr = models.CharField('数据库连接', max_length=5000, blank=False)
     StartURL=models.TextField('起始页', default='',max_length=5000, blank=True)
-    InURLRegularExpression = models.CharField('入口列表页', max_length=100, blank=False)
-    InURLNumber=models.IntegerField('页面数',default=1)
+    ListURLRegularExpression = models.CharField('列表链接规则', max_length=100, blank=False)
+    PageURLRegularExpression = models.CharField('详情列表规则', max_length=100, blank=False)
     PageProperty = models.CharField('属性名', max_length=100, blank=False)
     PagePropertyRegularExpression = models.CharField('属性内容匹配', max_length=100, blank=False)
     ResponseFormat_choices = (

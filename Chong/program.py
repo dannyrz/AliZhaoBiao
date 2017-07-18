@@ -11,6 +11,7 @@ from lxml import etree
 import pymysql.cursors
 import time, os, sched 
 import multiprocessing
+import redis
 
 dbconn = {
     'host':'123.157.8.102',
@@ -21,15 +22,34 @@ dbconn = {
     'charset':'utf8',
          }
 
+pool = redis.ConnectionPool(host='112.12.79.58',db=0, port=6379,password='redis1997@lydong.com')
+cache = redis.Redis(connection_pool=pool)
+
+
 processDict={}
 
 
+#此处的核心是要标记进程单次请求的页面列表不能重复请求，但同时为了增量更新，程序必须标注进程的记号。
 def parse(spider,content):
 	selector = etree.HTML(content)
 	fields=spider.args['Fields'];
+
+	for item in selector.xpath("//div[@class='content-list']/ul/li"):
+		url=item.xpath("div[@class='img']/a/@href")[0]
+		if cache.get(url) is None:
+			print(url)
+		else:
+			break
+			
+
 	for url in selector.xpath(fields['PageURL']):
-		print(url)
-		spider.request(url, callback=parse)
+		key=str(Spider.ID)+":"+url
+		if(cache.get(key) is None):
+			cache.set(key,url)
+			spider.request(url, callback=parse)
+		else:
+			continue
+		
 
 	# row={}
 	# for key in fields:
@@ -37,8 +57,7 @@ def parse(spider,content):
 	# 	row[key]=html.xpath(fields[key]);
 	# print(row)
 	# return row
-			
-			
+						
 
 def workSpider(task):
 	starturl=task['StartURL'].split('\n')
@@ -49,6 +68,7 @@ def workSpider(task):
 			'Fields':fields,
 		}
 	spider=SimpleSpider(args)
+	Spider.ID+=1;
 	for url in starturl:
 		url=url.strip()
 		if url!='':

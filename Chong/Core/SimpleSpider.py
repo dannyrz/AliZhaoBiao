@@ -15,4 +15,5 @@ class SimpleSpider(Spider):
 		response = requests.get(url,headers=head)
 		content = response.content
 		callback(self,content)
+		print("success send a request:"+url)
 		return content
