@@ -22,20 +22,27 @@ class Task(models.Model):
         ("MYSQL", "MYSQL保存"),
     )
     DataPersistenceType = models.CharField('保存方式', max_length=10,choices=DataPersistenceType_choices, default="POST")
-    PostURL = models.CharField('POST接收地址', max_length=5000, blank=False)
-    DatabaseConnectStr = models.CharField('数据库连接', max_length=5000, blank=False)
+    PostURL = models.CharField('POST接收地址', max_length=200, blank=True)
+    DatabaseConnectStr = models.CharField('数据库连接', max_length=5000, blank=True)
     StartURL=models.TextField('起始页', default='',max_length=5000, blank=True)
-    ListURLRegularExpression = models.CharField('列表链接规则', max_length=100, blank=False)
-    PageURLRegularExpression = models.CharField('详情列表规则', max_length=100, blank=False)
-    PageProperty = models.CharField('属性名', max_length=100, blank=False)
-    PagePropertyRegularExpression = models.CharField('属性内容匹配', max_length=100, blank=False)
+
+    ListURLRegularExpression = models.CharField('分页列表链接规则', max_length=100, blank=True)
+    PageListRegularExpression = models.CharField('详情页列表规则', max_length=100, blank=True,default='')
+    PageURLRegularExpression = models.CharField('详情页链接规则', max_length=100, blank=True, default='')
+
+    PagePropertyRegularExpression = models.TextField('属性内容匹配', max_length=500, blank=False)
     ResponseFormat_choices = (
         ("XML", "HTML/XML"),
         ("JSON", "JSON"),
     )
     ResponseFormat = models.CharField('返回格式', choices=ResponseFormat_choices, max_length=10,default="XML")
-    BodyFilterTextRegularExpression= models.CharField('属性名', max_length=5000, blank=False)
+    BodyFilterTextRegularExpression= models.CharField('正文过滤规则', max_length=5000, blank=False)
     TextReplace= models.CharField('替换文本', max_length=5000, blank=False)
+    DownLoadImg_choices = (
+        (0, "不下载"),
+        (1, "下载"),
+    )
+    DownLoadImg = models.IntegerField('下载图片', choices=DownLoadImg_choices, default=0)
     EnableBroswer_choices = (
         (0, "关闭"),
         (1, "启用"),

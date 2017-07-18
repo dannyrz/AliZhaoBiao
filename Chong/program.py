@@ -12,6 +12,7 @@ import pymysql.cursors
 import time, os, sched 
 import multiprocessing
 import redis
+import re
 
 dbconn = {
     'host':'123.157.8.102',
@@ -32,17 +33,23 @@ processDict={}
 #此处的核心是要标记进程单次请求的页面列表不能重复请求，但同时为了增量更新，程序必须标注进程的记号。
 def parse(spider,content):
 	selector = etree.HTML(content)
-	fields=spider.args['Fields'];
-
-	for item in selector.xpath("//div[@class='content-list']/ul/li"):
-		url=item.xpath("div[@class='img']/a/@href")[0]
-		if cache.get(url) is None:
-			print(url)
+	fields=spider.args['PagePropertyRegularExpression'];#页面提取属性
+	for item in selector.xpath(spider.args['PageListRegularExpression']): #文章列表提取
+		url=item.xpath(spider.args['PageURLRegularExpression'])[0] #基于列表开始的文章链接提取
+		if url is  None or len(url)<7:
+			continue
+		if  cache.get(url) is None:
+			link={
+				'url':url,
+				'extractRule':fields
+			}
+			cache.rpush("link",link)
+			cache.set(url,url)
 		else:
 			break
 			
 
-	for url in selector.xpath(fields['PageURL']):
+	for url in selector.xpath(spider.args['ListURLRegularExpression']):#分页链接提取
 		key=str(Spider.ID)+":"+url
 		if(cache.get(key) is None):
 			cache.set(key,url)
@@ -51,23 +58,9 @@ def parse(spider,content):
 			continue
 		
 
-	# row={}
-	# for key in fields:
-	# 	#row[key]=html.xpath(fields[key])[0].xpath('string(.)').strip()
-	# 	row[key]=html.xpath(fields[key]);
-	# print(row)
-	# return row
-						
-
 def workSpider(task):
-	starturl=task['StartURL'].split('\n')
-	fields={
-				"PageURL":"//div[@class='page']/a/@href"
-			}
-	args={
-			'Fields':fields,
-		}
-	spider=SimpleSpider(args)
+	starturl=task['StartURL'].split('\n') #入口页
+	spider=SimpleSpider(task)
 	Spider.ID+=1;
 	for url in starturl:
 		url=url.strip()
@@ -147,12 +140,20 @@ def scanTask():
 		# 	task["Account"]=row[16];
 		# 	task["NeedLogin"]=row[17];
 		# 	task["SpiderName"]=row[18];
-		
+
+def parsePage(spider,content):
 	
 
- 
-
+	
+def startQueueSpider():
+	while True:
+		link=cache.lpop("link")
+		args=link['extractRule']
+		spider=SimpleSpider(args)
+		spider.request(url, callback=parsePage)
+		print(link['url'])
 
 
 if __name__ == '__main__':
+	startQueueSpider()
 	scanTask()

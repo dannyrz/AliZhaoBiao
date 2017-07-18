@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta,abstractmethod,abstractproperty
 from lxml import etree
+import time;
 
 class Spider(metaclass=ABCMeta):
 
-	ID=0;
+	ID=time.time();
 
 	def __init__(self,args):
 		self.args=args;
