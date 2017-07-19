@@ -13,6 +13,7 @@ import time, os, sched
 import multiprocessing
 import redis
 import re
+import json
 
 dbconn = {
     'host':'123.157.8.102',
@@ -43,7 +44,7 @@ def parse(spider,content):
 				'url':url,
 				'extractRule':fields
 			}
-			cache.rpush("link",link)
+			cache.rpush("link",json.dumps(link))
 			cache.set(url,url)
 		else:
 			break
@@ -141,17 +142,34 @@ def scanTask():
 		# 	task["NeedLogin"]=row[17];
 		# 	task["SpiderName"]=row[18];
 
-def parsePage(spider,content):
+def parsePage(spider,html):
+	selector = etree.HTML(html)
+	propertys=spider.args['PagePropertyRegularExpression']
+	for key in propertys:
+		item=propertys[key];
+		if item.startwith('$'):
+			p1 = r%item.substring(1)
+			pattern1 = re.compile(p1)
+			print(pattern1.findall(key)) 
+		else:
+			selector = etree.HTML(content)
+			item=selector.xpath(item)
+			print(item)
+
 	
 
 	
 def startQueueSpider():
 	while True:
-		link=cache.lpop("link")
-		args=link['extractRule']
+		link=cache.lpop("link").decode('utf-8') #py3必须这么写
+		linkDict=json.loads(link)
+		url=linkDict['url']
+		print(url)
+		args=json.loads(linkDict['extractRule'])
+		print(args)
 		spider=SimpleSpider(args)
 		spider.request(url, callback=parsePage)
-		print(link['url'])
+		
 
 
 if __name__ == '__main__':

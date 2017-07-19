@@ -20,4 +20,3 @@ class Spider(metaclass=ABCMeta):
 	# 	for key in fields:
 	# 		row[key]=html.xpath(fields[key])[0].xpath('string(.)').strip()
 	# 	return row
-
