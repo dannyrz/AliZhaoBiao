@@ -42,7 +42,7 @@ def parse(spider,content):
 		if  cache.get(url) is None:
 			link={
 				'url':url,
-				'extractRule':fields
+				'task':spider.args
 			}
 			cache.rpush("link",json.dumps(link))
 			cache.set(url,url)
@@ -143,17 +143,21 @@ def scanTask():
 		# 	task["SpiderName"]=row[18];
 
 def parsePage(spider,html):
+	html=html.decode('utf-8')
 	selector = etree.HTML(html)
-	propertys=spider.args['PagePropertyRegularExpression']
+	propertys=json.loads(spider.args['PagePropertyRegularExpression'])
+
 	for key in propertys:
 		item=propertys[key];
-		if item.startwith('$'):
-			p1 = r%item.substring(1)
-			pattern1 = re.compile(p1)
-			print(pattern1.findall(key)) 
+		
+		if item.startswith('$'):
+
+			pattern1 = re.compile(r'%s' %(item[1:]))
+			match=pattern1.search(html)
+			if match:
+				print(match.group(1)) 
 		else:
-			selector = etree.HTML(content)
-			item=selector.xpath(item)
+			item=selector.xpath(item)[0]
 			print(item)
 
 	
@@ -164,9 +168,7 @@ def startQueueSpider():
 		link=cache.lpop("link").decode('utf-8') #py3必须这么写
 		linkDict=json.loads(link)
 		url=linkDict['url']
-		print(url)
-		args=json.loads(linkDict['extractRule'])
-		print(args)
+		args=linkDict['task']
 		spider=SimpleSpider(args)
 		spider.request(url, callback=parsePage)
 		
@@ -174,4 +176,4 @@ def startQueueSpider():
 
 if __name__ == '__main__':
 	startQueueSpider()
-	scanTask()
+	#scanTask()
