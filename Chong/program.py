@@ -16,6 +16,8 @@ import re
 import json
 import logging
 from urllib.parse import urljoin
+from urllib.parse import splittype
+from urllib.parse import splithost
 
 logging.basicConfig(level=logging.DEBUG,
                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -44,6 +46,10 @@ cache = redis.Redis(connection_pool=pool)
 
 
 processDict={}
+
+
+#?????????
+def isspidered():
 
 
 #此处的核心是要标记进程单次请求的页面列表不能重复请求，但同时为了增量更新，程序必须标注进程的记号。
@@ -180,6 +186,9 @@ def parsePage(spider,html):
 				for imgsrc in imgselector.xpath("//img/@src"):
 					if imgsrc is not None and len(imgsrc)>0:
 						cache.rpush('link-img',imgsrc)
+						proto, rest = splittype(imgsrc)
+						res, rest = splithost(rest)
+						propertys[key]=propertys[key].replace(imgsrc,imgsrc.replace(res,'img.zyai.top'))
 						logging.info('push a img link to queue %s .' %imgsrc)
 
 
@@ -191,7 +200,7 @@ def parsePage(spider,html):
 	
 
 	
-def startQueueSpider():
+def startQueueSpider(args):
 	while True:
 		link=cache.lpop("link")
 		if link is None:
@@ -206,8 +215,11 @@ def startQueueSpider():
 
 		time.sleep(5)
 		
-
+def runPageSpider():
+	process=multiprocessing.Process(target=startQueueSpider,args=(None,))
+	process.start()
+	logging.info('start new process: pageSpider .')
 
 if __name__ == '__main__':
-	startQueueSpider()
-	#scanTask()
+	#runPageSpider()
+	scanTask()
