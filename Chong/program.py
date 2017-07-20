@@ -14,6 +14,21 @@ import multiprocessing
 import redis
 import re
 import json
+import logging
+from urllib.parse import urljoin
+
+logging.basicConfig(level=logging.DEBUG,
+                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                filename='myapp.log',
+                filemode='w')
+
+#################################################################################################
+#定义一个StreamHandler，将INFO级别或更高的日志信息打印到标准错误，并将其添加到当前的日志处理对象#
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
 
 dbconn = {
     'host':'123.157.8.102',
@@ -37,8 +52,10 @@ def parse(spider,content):
 	fields=spider.args['PagePropertyRegularExpression'];#页面提取属性
 	for item in selector.xpath(spider.args['PageListRegularExpression']): #文章列表提取
 		url=item.xpath(spider.args['PageURLRegularExpression'])[0] #基于列表开始的文章链接提取
-		if url is  None or len(url)<7:
+		if url is  None:
 			continue
+		
+		url=urljoin(url,url)
 		if  cache.get(url) is None:
 			link={
 				'url':url,
@@ -150,19 +167,31 @@ def parsePage(spider,html):
 		if item.startwith('$'):
 			p1 = r%item.substring(1)
 			pattern1 = re.compile(p1)
-			print(pattern1.findall(key)) 
+			propertys[key]=pattern1.findall(key)
+			#对文章的内容进行特殊处理，提取图片
+			if key=='content_raw' and spider.args['DownLoadImg']==1:
+				imgselector== etree.HTML(propertys[key])
+				for img in imgselector.xpath("//img/@src"):
+					if img is not None and len(img)>0:
+						cache.rpush('link-img',img)
+
+
 		else:
 			selector = etree.HTML(content)
 			item=selector.xpath(item)
-			print(item)
+			propertys[key]=item
 
 	
 
 	
 def startQueueSpider():
 	while True:
-		link=cache.lpop("link").decode('utf-8') #py3必须这么写
-		linkDict=json.loads(link)
+		link=cache.lpop("link")
+		if link is None:
+			logging.warning('none link in queue. waiting 10s try to get again.')
+			time.sleep(10)
+			continue
+		linkDict=json.loads(link.decode('utf-8'))
 		url=linkDict['url']
 		print(url)
 		args=json.loads(linkDict['extractRule'])
@@ -174,4 +203,4 @@ def startQueueSpider():
 
 if __name__ == '__main__':
 	startQueueSpider()
-	scanTask()
+	#scanTask()
