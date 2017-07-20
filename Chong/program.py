@@ -68,7 +68,7 @@ def parse(spider,content):
 			
 
 	for url in selector.xpath(spider.args['ListURLRegularExpression']):#分页链接提取
-		key=str(Spider.ID)+":"+url
+		key="PageList:"+str(Spider.ID)
 		if(cache.get(key) is None):
 			cache.set(key,url)
 			spider.request(url, callback=parse)
@@ -93,6 +93,7 @@ def runTaskProcess(task):
 	process.name=processName
 	processDict[processName]=process;
 	process.start()
+	logging.info('start new process:%s' % processName)
 
 
 
@@ -161,26 +162,32 @@ def scanTask():
 
 def parsePage(spider,html):
 	selector = etree.HTML(html)
-	propertys=spider.args['PagePropertyRegularExpression']
+	html=html.decode('utf-8')
+	propertys=json.loads(spider.args['PagePropertyRegularExpression'])
 	for key in propertys:
+		
 		item=propertys[key];
-		if item.startwith('$'):
-			p1 = r%item.substring(1)
-			pattern1 = re.compile(p1)
-			propertys[key]=pattern1.findall(key)
+		if item.startswith('$'):
+			p1 = r'%s' % item[1:]
+			pattern = re.compile(p1)
+			match = pattern.search(html)
+ 
+			if match:
+				propertys[key]=match.group(1)
 			#对文章的内容进行特殊处理，提取图片
 			if key=='content_raw' and spider.args['DownLoadImg']==1:
-				imgselector== etree.HTML(propertys[key])
-				for img in imgselector.xpath("//img/@src"):
-					if img is not None and len(img)>0:
-						cache.rpush('link-img',img)
+				imgselector=etree.HTML(propertys[key])
+				for imgsrc in imgselector.xpath("//img/@src"):
+					if imgsrc is not None and len(imgsrc)>0:
+						cache.rpush('link-img',imgsrc)
+						logging.info('push a img link to queue %s .' %imgsrc)
 
 
 		else:
-			selector = etree.HTML(content)
-			item=selector.xpath(item)
+			item=selector.xpath(item)[0]
 			propertys[key]=item
 
+	print(propertys)
 	
 
 	
@@ -188,16 +195,16 @@ def startQueueSpider():
 	while True:
 		link=cache.lpop("link")
 		if link is None:
-			logging.warning('none link in queue. waiting 10s try to get again.')
+			logging.warning('none link in queue, waiting 10s try to get again.')
 			time.sleep(10)
 			continue
 		linkDict=json.loads(link.decode('utf-8'))
 		url=linkDict['url']
-		print(url)
-		args=json.loads(linkDict['extractRule'])
-		print(args)
+		args=json.loads(json.dumps(linkDict['task']))
 		spider=SimpleSpider(args)
 		spider.request(url, callback=parsePage)
+
+		time.sleep(5)
 		
 
 
