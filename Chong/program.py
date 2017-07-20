@@ -59,7 +59,7 @@ def parse(spider,content):
 		if  cache.get(url) is None:
 			link={
 				'url':url,
-				'extractRule':fields
+				'task':spider.args
 			}
 			cache.rpush("link",json.dumps(link))
 			cache.set(url,url)
