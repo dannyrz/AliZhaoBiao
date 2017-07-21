@@ -6,6 +6,8 @@
 # 相当于从模块里索引出这个类两种方法都可以。
 from Core.Spider import Spider
 from Core.SimpleSpider import SimpleSpider
+import logging
+from Core.Log import Log
 import requests
 from lxml import etree
 import pymysql.cursors
@@ -14,23 +16,11 @@ import multiprocessing
 import redis
 import re
 import json
-import logging
 from urllib.parse import urljoin
 from urllib.parse import splittype
 from urllib.parse import splithost
 
-logging.basicConfig(level=logging.DEBUG,
-                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                filename='myapp.log',
-                filemode='w')
-
-#################################################################################################
-#定义一个StreamHandler，将INFO级别或更高的日志信息打印到标准错误，并将其添加到当前的日志处理对象#
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
-console.setFormatter(formatter)
-logging.getLogger('').addHandler(console)
+log = Log()
 
 dbconn = {
     'host':'123.157.8.102',
@@ -48,12 +38,22 @@ cache = redis.Redis(connection_pool=pool)
 processDict={}
 
 
-#?????????
-def isspidered():
+
+def isspided(spiderid,url):
+	key="PageList:"+str(Spider.ID)
+	spided = cache.get(key)
+	if spided is None:
+		return False
+	else:
+		return True
+
+def markspided(spiderid,url):
+	key="PageList:"+str(Spider.ID)
+	cache.set(key,url)
 
 
 #此处的核心是要标记进程单次请求的页面列表不能重复请求，但同时为了增量更新，程序必须标注进程的记号。
-def parse(spider,content):
+def parse(spider,url,content):
 	selector = etree.HTML(content)
 	fields=spider.args['PagePropertyRegularExpression'];#页面提取属性
 	for item in selector.xpath(spider.args['PageListRegularExpression']): #文章列表提取
@@ -71,12 +71,11 @@ def parse(spider,content):
 			cache.set(url,url)
 		else:
 			break
-			
+
+	markspided(spider.ID,url)
 
 	for url in selector.xpath(spider.args['ListURLRegularExpression']):#分页链接提取
-		key="PageList:"+str(Spider.ID)
-		if(cache.get(key) is None):
-			cache.set(key,url)
+		if isspided(Spider.ID,url)==False:
 			spider.request(url, callback=parse)
 		else:
 			continue
@@ -85,7 +84,6 @@ def parse(spider,content):
 def workSpider(task):
 	starturl=task['StartURL'].split('\n') #入口页
 	spider=SimpleSpider(task)
-	Spider.ID+=1;
 	for url in starturl:
 		url=url.strip()
 		if url!='':
@@ -112,17 +110,17 @@ def dispatchTaskProcess(task):
 			runTaskProcess(task)
 	else:
 		if  process.is_alive()==False and on==True:
-			print('task is not alived and sql config:on is true.')
+			logging.info('task is not alived and sql config:on is true.')
 			process.terminate()
 			runTaskProcess(task)
 		elif process.is_alive()==True and on==False:
-			print('task is lived and sql config:on is false.')
+			logging.info('task is lived and sql config:on is false.')
 			process.terminate()
 		elif process.is_alive()==False and on==False:
-			print('task is not alived and sql config:on is false.')
+			logging.info('task is not alived and sql config:on is false.')
 			process.terminate()
 		elif process.is_alive()==True and on==True:
-			print('task is alived and sql config:on is true. it is in running.')
+			logging.info('task is alived and sql config:on is true. it is in running.')
 
 def popTask():
 	while True:
