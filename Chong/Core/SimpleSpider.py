@@ -19,7 +19,6 @@ class SimpleSpider(Spider):
 
 		logging.info("success send a request:"+url)
 
-		content = response.content
-		callback(self,url,content)
+		callback(self,url,response)
 
-		return content
+		return response

@@ -19,10 +19,12 @@ import json
 from urllib.parse import urljoin
 from urllib.parse import splittype
 from urllib.parse import splithost
+from urllib.parse import urlparse
 from wordpress_xmlrpc import Client, WordPressPost, WordPressTerm
 from wordpress_xmlrpc.methods.posts import GetPosts, NewPost
 from wordpress_xmlrpc.methods.users import GetUserInfo
 from wordpress_xmlrpc.methods import taxonomies
+import os
 
 logging.basicConfig(level=logging.DEBUG,
      format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -67,8 +69,8 @@ def markspided(spiderid,url):
 
 
 #此处的核心是要标记进程单次请求的页面列表不能重复请求，但同时为了增量更新，程序必须标注进程的记号。
-def parse(spider,url,content):
-
+def parse(spider,url,response):
+	content=response.content
 	logging.info('callback pagelist-parse url: %s' % url)
 
 	selector = etree.HTML(content)
@@ -188,12 +190,12 @@ def scanTask():
 		# 	task["NeedLogin"]=row[17];
 		# 	task["SpiderName"]=row[18];
 
-def parsePage(spider,url,html):
+def parsePage(spider,url,response):
+	html=response.content
 	selector = etree.HTML(html)
 	html=html.decode('utf-8')
 	propertys=json.loads(spider.args['PagePropertyRegularExpression'])
 	for key in propertys:
-		
 		item=propertys[key];
 		if item.startswith('$'):
 			p1 = r'%s' % item[1:]
@@ -241,7 +243,15 @@ def parsePage(spider,url,html):
 		pass
 
 	
+def parseImage(spider,url,response):
+	content=response.content
+	filepathname =  "download%s"%urlparse(url).path
+	path, filename = os.path.split(filepathname);
+	if not os.path.exists(path):
+		os.makedirs(path)
+	open(filepathname, 'wb').write(content)
 
+	logging.info('successfully down a image:%s' % filepathname)
 	
 def startQueueSpider(args):
 	while True:
@@ -255,15 +265,37 @@ def startQueueSpider(args):
 		args=json.loads(json.dumps(linkDict['task']))
 		spider=SimpleSpider(args)
 		spider.request(url, callback=parsePage)
-
 		time.sleep(5)
-		
+
+def startImageQueueSpider(args):
+	while True:
+		link = cache.lpop("link-img")
+		if link is None:
+			logging.warning('none image link in queue, waiting 10s try to get again.')
+			time.sleep(10)
+			continue
+
+		url = link.decode('utf-8')
+		spider = SimpleSpider(None)
+		spider.request(url, callback=parseImage)
+		time.sleep(2)
+
+
 def runPageSpider():
 	process=multiprocessing.Process(target=startQueueSpider,args=(None,))
 	process.start()
 	logging.info('start new process: pageSpider .')
 
+
+
+
+def runImageSpider():
+	process = multiprocessing.Process(target=startImageQueueSpider, args=(None,))
+	process.start()
+	logging.info('start new process: ImageQueueSpider .')
+
 if __name__ == '__main__':
 	logging.info('program start.')
-	runPageSpider()
+	runImageSpider();
+	#runPageSpider()
 	#scanTask()
