@@ -18,12 +18,16 @@ class Task(models.Model):
     WorkInterval = models.IntegerField('间隔时(min)', default=1)
     ThreadNumber = models.IntegerField('线程数', default=1)
     DataPersistenceType_choices = (
+        ("WPRPC", "WordPress xmlrpc"),
         ("POST", "POST提交保存"),
         ("MYSQL", "MYSQL保存"),
     )
     DataPersistenceType = models.CharField('保存方式', max_length=10,choices=DataPersistenceType_choices, default="POST")
-    PostURL = models.CharField('POST接收地址', max_length=200, blank=True)
+    WPUserName=models.CharField('WP账号', max_length=200, blank=True)
+    WPPassword = models.CharField('WP密码', max_length=200, blank=True)
+    PostURL = models.CharField('POST／RPC URL', max_length=200, blank=True)
     DatabaseConnectStr = models.CharField('数据库连接', max_length=5000, blank=True)
+
     StartURL=models.TextField('起始页', default='',max_length=5000, blank=True)
 
     ListURLRegularExpression = models.CharField('分页列表链接规则', max_length=100, blank=True)

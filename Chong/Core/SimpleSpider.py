@@ -2,10 +2,9 @@
 # 这个类是一个简单的爬虫类，应该是抽象出一个爬虫最基本的功能，就是获取指定网页的html内容
 from Core.Spider import Spider
 import requests
-from Core.Log import Log
+import Core.Log
 import logging
 
-log = Log()
 
 head = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36'} 
 

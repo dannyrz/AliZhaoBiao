@@ -7,7 +7,7 @@
 from Core.Spider import Spider
 from Core.SimpleSpider import SimpleSpider
 import logging
-from Core.Log import Log
+import Core.Log 
 import requests
 from lxml import etree
 import pymysql.cursors
@@ -19,8 +19,22 @@ import json
 from urllib.parse import urljoin
 from urllib.parse import splittype
 from urllib.parse import splithost
+from wordpress_xmlrpc import Client, WordPressPost, WordPressTerm
+from wordpress_xmlrpc.methods.posts import GetPosts, NewPost
+from wordpress_xmlrpc.methods.users import GetUserInfo
+from wordpress_xmlrpc.methods import taxonomies
 
-log = Log()
+logging.basicConfig(level=logging.DEBUG,
+     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+            filename='log.log',
+            filemode='w')
+#################################################################################################
+#定义一个StreamHandler，将INFO级别或更高的日志信息打印到标准错误，并将其添加到当前的日志处理对象#
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
 
 dbconn = {
     'host':'123.157.8.102',
@@ -38,9 +52,9 @@ cache = redis.Redis(connection_pool=pool)
 processDict={}
 
 
-
+#判断同一进程运行时分页连接是否已抓取过
 def isspided(spiderid,url):
-	key="PageList:"+str(Spider.ID)
+	key="PageList-%s:%s" %(str(Spider.ID),str(hash(url)))
 	spided = cache.get(key)
 	if spided is None:
 		return False
@@ -48,36 +62,45 @@ def isspided(spiderid,url):
 		return True
 
 def markspided(spiderid,url):
-	key="PageList:"+str(Spider.ID)
+	key="PageList-%s:%s" %(str(Spider.ID),str(hash(url)))
 	cache.set(key,url)
 
 
 #此处的核心是要标记进程单次请求的页面列表不能重复请求，但同时为了增量更新，程序必须标注进程的记号。
 def parse(spider,url,content):
+
+	logging.info('callback pagelist-parse url: %s' % url)
+
 	selector = etree.HTML(content)
 	fields=spider.args['PagePropertyRegularExpression'];#页面提取属性
 	for item in selector.xpath(spider.args['PageListRegularExpression']): #文章列表提取
-		url=item.xpath(spider.args['PageURLRegularExpression'])[0] #基于列表开始的文章链接提取
-		if url is  None:
+		itemurl=item.xpath(spider.args['PageURLRegularExpression'])[0] #基于列表开始的文章链接提取
+		if itemurl is  None:
 			continue
 		
-		url=urljoin(url,url)
-		if  cache.get(url) is None:
+		itemurl=urljoin(url,itemurl)
+		if  cache.get(itemurl) is None:
 			link={
-				'url':url,
+				'url':itemurl,
 				'task':spider.args
 			}
 			cache.rpush("link",json.dumps(link))
-			cache.set(url,url)
+			cache.set(itemurl,itemurl)
+
+			logging.info('successfully fetch a item and push to redis list url: %s' %itemurl)
 		else:
+			logging.info('page list,s item has finished fetch: %s' %itemurl)
 			break
 
 	markspided(spider.ID,url)
+
+	logging.info('finished parse item list link .')
 
 	for url in selector.xpath(spider.args['ListURLRegularExpression']):#分页链接提取
 		if isspided(Spider.ID,url)==False:
 			spider.request(url, callback=parse)
 		else:
+			logging.info('list page url:%s has been fectked .' % url)
 			continue
 		
 
@@ -92,11 +115,12 @@ def workSpider(task):
 
 #该函数已经测试过创建出的进程会随机运行该函数，说明进程各司其职
 def runTaskProcess(task):
-	processName=task['SpiderName']
 	process=multiprocessing.Process(target=workSpider,args=(task,))
+	processName=task['SpiderName']
 	process.name=processName
-	processDict[processName]=process;
+	processDict[processName]=process;	
 	process.start()
+
 	logging.info('start new process:%s' % processName)
 
 
@@ -164,7 +188,7 @@ def scanTask():
 		# 	task["NeedLogin"]=row[17];
 		# 	task["SpiderName"]=row[18];
 
-def parsePage(spider,html):
+def parsePage(spider,url,html):
 	selector = etree.HTML(html)
 	html=html.decode('utf-8')
 	propertys=json.loads(spider.args['PagePropertyRegularExpression'])
@@ -194,7 +218,28 @@ def parsePage(spider,html):
 			item=selector.xpath(item)[0]
 			propertys[key]=item
 
-	print(propertys)
+	dataPersistenceType=spider.args['DataPersistenceType']
+
+	if dataPersistenceType=='WPRPC' :
+		wp = Client('http://tech.cocopass.com/xmlrpc.php', 'admin', '19841204')
+
+		"""
+		发表博文
+		"""
+		post = WordPressPost()
+		post.title = propertys['title'].encode('utf-8')
+		post.content = propertys['content_raw'].encode('utf-8')
+		post.post_status = 'publish'
+		post.terms_names = {
+			'post_tag': [post.title],
+			'category': ['爱好']
+		}
+		wp.call(NewPost(post))
+		logging.info('successfully post one article: %s .' % post.title )
+
+	elif dataPersistenceType=='MYSQL':
+		pass
+
 	
 
 	
@@ -219,5 +264,6 @@ def runPageSpider():
 	logging.info('start new process: pageSpider .')
 
 if __name__ == '__main__':
-	#runPageSpider()
-	scanTask()
+	logging.info('program start.')
+	runPageSpider()
+	#scanTask()
