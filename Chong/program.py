@@ -205,15 +205,19 @@ def parsePage(spider,url,response):
 			if match:
 				propertys[key]=match.group(1)
 			#对文章的内容进行特殊处理，提取图片
-			if key=='content_raw' and spider.args['DownLoadImg']==1:
-				imgselector=etree.HTML(propertys[key])
-				for imgsrc in imgselector.xpath("//img/@src"):
-					if imgsrc is not None and len(imgsrc)>0:
-						cache.rpush('link-img',imgsrc)
-						proto, rest = splittype(imgsrc)
-						res, rest = splithost(rest)
-						propertys[key]=propertys[key].replace(imgsrc,imgsrc.replace(res,'img.zyai.top'))
-						logging.info('push a img link to queue %s .' %imgsrc)
+			if key=='content_raw':
+				contentselector=etree.HTML(propertys[key])
+				etree.strip_elements(contentselector, 'script')
+				etree.strip_tags(contentselector, 'a')
+				propertys[key]=etree.tostring(contentselector).decode('utf-8')
+				if spider.args['DownLoadImg']==1:
+					for imgsrc in contentselector.xpath("//img/@src"):
+						if imgsrc is not None and len(imgsrc)>0:
+							cache.rpush('link-img',imgsrc)
+							proto, rest = splittype(imgsrc)
+							res, rest = splithost(rest)
+							propertys[key]=propertys[key].replace(imgsrc,imgsrc.replace(res,'img.zyai.top'))
+							logging.info('push a img link to queue %s .' %imgsrc)
 
 
 		else:
@@ -237,7 +241,7 @@ def parsePage(spider,url,response):
 			'category': ['爱好']
 		}
 		wp.call(NewPost(post))
-		logging.info('successfully post one article: %s .' % post.title )
+		logging.info('successfully post one article: %s .' % propertys['title'] )
 
 	elif dataPersistenceType=='MYSQL':
 		pass
@@ -296,6 +300,6 @@ def runImageSpider():
 
 if __name__ == '__main__':
 	logging.info('program start.')
-	runImageSpider();
-	#runPageSpider()
+	#runImageSpider();
+	runPageSpider()
 	#scanTask()
